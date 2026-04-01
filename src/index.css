@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --color-bg: #f4f6f7;
+  --color-bg-alt: #e8f2f0;
+  --color-text: #2e3940;
+  --color-heading: #152228;
+  --color-muted: #60707a;
+  --color-border: #cad6da;
+  --color-panel: #ffffff;
+  --color-panel-soft: #f2f7f8;
+  --color-primary: #1271a6;
+  --color-primary-strong: #0d5b85;
+  --color-danger: #ce3f4d;
+  --shadow-soft: 0 10px 30px rgba(17, 56, 74, 0.08);
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0d151a;
+  --color-bg-alt: #152228;
+  --color-text: #d0dee5;
+  --color-heading: #f1f7fa;
+  --color-muted: #95aab5;
+  --color-border: #2a3940;
+  --color-panel: #142228;
+  --color-panel-soft: #1b2d35;
+  --color-primary: #2b9cd6;
+  --color-primary-strong: #2385b6;
+  --color-danger: #f76f7c;
+  --shadow-soft: 0 14px 34px rgba(3, 7, 10, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--color-primary) 15%, transparent), transparent 35%),
+    radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--color-bg-alt) 85%, transparent), transparent 40%),
+    linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
+}
+
+.font-heading {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 420ms ease both;
+}
+
+.animate-modal-in {
+  animation: modal-in 240ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-modal-in {
+    animation: none;
+  }
+}
