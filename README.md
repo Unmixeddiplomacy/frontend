@@ -1,8 +1,22 @@
 # Finance Dashboard UI
 
-A frontend-only finance dashboard built with React, TypeScript, Redux Toolkit, and Tailwind CSS.
+An evaluation-focused finance dashboard built with React, TypeScript, Redux Toolkit, and Tailwind CSS.
 
-The project is designed to satisfy the assignment requirements with production-grade structure, reusable components, and clear state management.
+This project demonstrates production-style frontend architecture with reusable components, centralized state management, role-aware interactions, interpreted insights, and polished UI behavior.
+
+## Why This Submission Stands Out
+
+- Insight intelligence instead of raw metrics only
+  - Interprets spending change month-over-month
+  - Compares savings versus previous month in human-readable language
+  - Recommends focus areas based on spending concentration and savings health
+- Meaningful RBAC simulation on the frontend
+  - Admin can add transactions, edit inline, and delete records
+  - Viewer sees action controls but they are disabled with clear explanations
+- Professional UX polish
+  - Intentional spacing and typography system
+  - Animated charts and hover transitions
+  - Responsive layout and graceful empty/error/loading states
 
 ## Tech Stack
 
@@ -10,118 +24,159 @@ The project is designed to satisfy the assignment requirements with production-g
 - Vite 8
 - Redux Toolkit + React Redux
 - Tailwind CSS v4
-- Recharts (time-based + categorical charts)
-- date-fns (date formatting)
+- Recharts
+- date-fns
+- lucide-react
 
-## Run Locally
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Build and checks:
+Open the local URL shown in terminal (typically http://localhost:5173).
+
+## Quality Checks
 
 ```bash
 npm run lint
 npm run build
 ```
 
-## Assignment Coverage
+## Feature Matrix (Assignment Mapping)
 
-### 1. Dashboard Overview
+### 1) Dashboard Overview
 
-- Summary cards: total balance, income, expenses
-- Time-based visualization: monthly balance trend (area chart)
-- Categorical visualization: expense category breakdown (pie chart)
+- Summary cards for:
+  - Total Balance
+  - Income
+  - Expenses
+- Time-based visualization:
+  - Monthly balance trend area chart
+- Categorical visualization:
+  - Expense category breakdown pie chart
 
-### 2. Transactions Section
+### 2) Transactions Section
 
-- Transaction table includes: date, amount, category, type, description
-- Features:
-  - Search (description/category)
-  - Type filter
-  - Category filter
-  - Sorting (date/amount/category + asc/desc)
-  - Empty state when no data matches filters
+- Table fields:
+  - Date
+  - Description
+  - Category
+  - Type
+  - Amount
+- Interactions:
+  - Search by description/category
+  - Filter by type/category
+  - Sort by date/amount/category + direction toggle
+  - Reset filters
+  - Export filtered view to CSV and JSON
+  - Graceful empty result state
 
-### 3. Basic Role-Based UI (frontend simulation)
+### 3) Role-Based UI (Simulated)
 
-- Role switcher: viewer/admin
-- Viewer: read-only dashboard
-- Admin: add/edit transactions via modal form
+- Role switcher: Viewer / Admin
+- Viewer:
+  - Read-only mode
+  - Add/Edit/Delete controls remain visible but disabled
+  - Explanation messages clarify permission constraints
+- Admin:
+  - Add new transaction (modal form)
+  - Edit transactions inline directly in table rows
+  - Delete transactions with confirmation
 
-### 4. Insights Section
+### 4) Insights Section (Interpreted Data)
 
-- Highest spending category
-- Monthly expense comparison
-- Net savings rate and observation card
+Not just display, but interpretation:
 
-### 5. State Management
+- Spending intelligence:
+  - "Your spending increased/decreased by X% (amount) vs last month"
+- Savings intelligence:
+  - "You saved X more/less compared to last month"
+- Category risk signal:
+  - Highest spending category and share of total spend
+- Recommendation engine:
+  - Contextual focus suggestion based on current financial behavior
 
-Centralized Redux slices:
+### 5) State Management
 
-- transactions slice
-- filters slice
-- ui slice (role + theme)
+Redux store slices:
 
-Derived data is computed with memoized selectors:
+- transactions
+- filters
+- ui
 
-- summary metrics
-- filtered/sorted transaction list
-- monthly trend series
-- category breakdown
-- insights calculations
+Memoized selectors drive derived UI and analytics:
 
-### 6. UI and UX
+- Summary totals
+- Filtered/sorted transaction list
+- Monthly trend series
+- Category breakdown
+- Insight intelligence fields and recommendations
 
-- Responsive layout across mobile/tablet/desktop
-- Styled loading, empty, and error states
-- Intentional visual system (custom typography, design tokens, layered background)
+### 6) UI/UX Expectations
+
+- Responsive desktop/tablet/mobile layout
+- Design tokens for spacing, typography, and color system
+- Interactive card and table hover states
+- Animated chart rendering + reduced-motion fallback
+- Loading skeletons, empty states, and API error retry handling
 
 ## Optional Enhancements Included
 
 - Dark mode with persistence
-- Local storage persistence for role, filters, theme, and edited transactions
-- CSV and JSON export for current filtered transaction view
-- Mock API integration with loading/error flow
-- Subtle animations with reduced-motion support
+- localStorage persistence for role, theme, filters, and transactions
+- Mock API integration with simulated latency and optional forced failure
+- CSV and JSON export of current filtered data
+- Subtle motion and micro-interactions
 
-## Project Structure
+## Architecture
 
 ```text
 src/
-  app/                  # store and typed hooks
+  app/
+    hooks.ts
+    store.ts
   components/
-    common/             # reusable primitives
-    controls/           # role/theme controls
-    dashboard/          # summary and chart modules
-    insights/           # insights cards
-    layout/             # shell/layout
-    transactions/       # table + modal
-  data/                 # static mock dataset
+    common/         # primitives (Card, Button, states, headers)
+    controls/       # role + theme controls
+    dashboard/      # summary cards + charts
+    insights/       # interpreted intelligence panels
+    layout/         # app shell
+    transactions/   # filterable table + inline edit + add modal
+  data/
+    mockTransactions.ts
   features/
-    filters/            # filter/search/sort state
-    selectors/          # memoized derived state
-    transactions/       # async load + CRUD reducers
-    ui/                 # role/theme state
-  pages/                # page-level composition
-  services/             # mock API layer
-  types/                # domain models
-  utils/                # formatting, storage, exports
+    filters/
+    selectors/
+    transactions/
+    ui/
+  pages/
+  services/
+  types/
+  utils/
 ```
 
-## Mock API Notes
+## RBAC Demo Flow
 
-Transactions are fetched from a mock service with simulated latency.
+1. Start in Viewer role.
+2. Go to Transactions section.
+3. Observe Add/Edit/Delete controls are disabled and explained.
+4. Switch to Admin role.
+5. Add a transaction, edit a row inline, then delete one row.
+6. Refresh page and confirm persistence.
 
-To simulate an API error state for testing:
+## Mock API Behavior
+
+Transactions are fetched from a mocked async service.
+
+Force API failure for testing:
 
 ```js
 localStorage.setItem('finance-dashboard:force-api-error', '1')
 ```
 
-Disable it by removing/resetting the key:
+Restore normal behavior:
 
 ```js
 localStorage.removeItem('finance-dashboard:force-api-error')
@@ -129,12 +184,13 @@ localStorage.removeItem('finance-dashboard:force-api-error')
 
 ## Assumptions and Trade-offs
 
-- Frontend-only role simulation (no backend auth/RBAC)
-- Static mock data with client-side persistence
-- No server/database integration by design for assignment scope
+- Frontend-only RBAC simulation (no backend auth enforcement)
+- Static seeded mock data + client persistence
+- Optimized for assignment evaluation, architecture clarity, and UX quality
 
-## Potential Next Improvements
+## Future Improvements
 
-- Data virtualization for very large transaction datasets
-- Route-based code splitting to reduce bundle size
-- Unit tests for selectors and reducer logic
+- Unit tests for selectors and reducers
+- Integration tests for role-based interaction flows
+- Transaction pagination/virtualization for large datasets
+- Optional backend sync mode

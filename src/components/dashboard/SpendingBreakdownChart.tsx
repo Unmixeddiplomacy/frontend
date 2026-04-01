@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { PieChart as PieChartIcon } from 'lucide-react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useAppSelector } from '../../app/hooks'
@@ -11,6 +12,7 @@ const COLORS = ['#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6'
 
 export function SpendingBreakdownChart() {
   const breakdown = useAppSelector(selectCategoryBreakdown)
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
   if (breakdown.length === 0) {
     return (
@@ -49,9 +51,18 @@ export function SpendingBreakdownChart() {
                 outerRadius={105}
                 innerRadius={60}
                 paddingAngle={3}
+                onMouseEnter={(_, index) => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(null)}
+                isAnimationActive
+                animationDuration={900}
+                animationEasing="ease-out"
               >
                 {breakdown.map((entry, index) => (
-                  <Cell key={entry.category} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={entry.category}
+                    fill={COLORS[index % COLORS.length]}
+                    opacity={activeIndex === null || activeIndex === index ? 1 : 0.45}
+                  />
                 ))}
               </Pie>
               <Tooltip
@@ -64,6 +75,7 @@ export function SpendingBreakdownChart() {
                   borderRadius: 12,
                   border: '1px solid var(--color-border)',
                   background: 'var(--color-panel)',
+                  boxShadow: '0 10px 28px rgba(0, 0, 0, 0.14)',
                 }}
               />
             </PieChart>
@@ -73,7 +85,7 @@ export function SpendingBreakdownChart() {
           {breakdown.map((item, index) => (
             <li
               key={item.category}
-              className="flex items-center justify-between rounded-lg bg-(--color-panel-soft) px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-lg bg-(--color-panel-soft) px-3 py-2 text-sm transition-all duration-200 hover:translate-x-1 hover:bg-(--color-panel)"
             >
               <span className="inline-flex items-center gap-2 text-(--color-text)">
                 <span

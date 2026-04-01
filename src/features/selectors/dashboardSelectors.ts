@@ -5,6 +5,7 @@ import type {
   CategoryBreakdownItem,
   InsightsSummary,
   MonthlyPoint,
+  TrendDirection,
   Transaction,
 } from '../../types/finance'
 
@@ -128,25 +129,67 @@ export const selectInsights = createSelector(
     summary,
     transactions,
   ): InsightsSummary => {
+    const getDirection = (delta: number): TrendDirection => {
+      if (delta > 0) {
+        return 'up'
+      }
+      if (delta < 0) {
+        return 'down'
+      }
+      return 'flat'
+    }
+
     const topCategory = categoryBreakdown[0]
     const currentMonth = monthlyTrend[monthlyTrend.length - 1]
     const previousMonth = monthlyTrend[monthlyTrend.length - 2]
 
     const previousExpense = previousMonth?.expense ?? 0
     const currentExpense = currentMonth?.expense ?? 0
-    const monthlyChangePercent = previousExpense
-      ? (currentExpense - previousExpense) / previousExpense
+    const spendingDeltaAmount = currentExpense - previousExpense
+    const spendingDirection = previousMonth
+      ? getDirection(spendingDeltaAmount)
+      : 'na'
+    const spendingDeltaPercent = previousExpense
+      ? spendingDeltaAmount / previousExpense
       : 0
+
+    const currentSavings = currentMonth?.balance ?? 0
+    const previousSavings = previousMonth?.balance ?? 0
+    const savingsDeltaAmount = currentSavings - previousSavings
+    const savingsDirection = previousMonth ? getDirection(savingsDeltaAmount) : 'na'
+
+    const netSavingsRate = summary.income ? (summary.balance / summary.income) * 100 : 0
+
+    let recommendedFocus =
+      'Spending distribution looks balanced. Continue tracking variable expenses weekly.'
+
+    if (summary.balance < 0) {
+      recommendedFocus =
+        'Expenses are outpacing income. Prioritize reducing discretionary categories this month.'
+    } else if ((topCategory?.percentage ?? 0) >= 0.4) {
+      recommendedFocus = `${topCategory?.category ?? 'Top category'} is dominating spend. Consider setting a tighter category cap.`
+    } else if (netSavingsRate >= 30) {
+      recommendedFocus =
+        'Savings momentum is strong. You can move surplus into investments or emergency reserves.'
+    }
 
     return {
       highestSpendingCategory: topCategory?.category ?? 'N/A',
       highestSpendingAmount: topCategory?.amount ?? 0,
-      monthlyChangePercent,
-      monthlyChangeLabel: monthlyChangePercent >= 0 ? 'up' : 'down',
-      netSavingsRate: summary.income
-        ? (summary.balance / summary.income) * 100
-        : 0,
+      topCategoryShare: topCategory?.percentage ?? 0,
+      monthlyChangePercent: spendingDeltaPercent,
+      monthlyChangeLabel:
+        spendingDirection === 'na' ? 'n/a' : spendingDirection,
+      netSavingsRate,
       totalTransactions: transactions.length,
+      currentMonthLabel: currentMonth?.month ?? 'N/A',
+      previousMonthLabel: previousMonth?.month ?? 'N/A',
+      spendingDirection,
+      spendingDeltaAmount,
+      spendingDeltaPercent,
+      savingsDirection,
+      savingsDeltaAmount,
+      recommendedFocus,
     }
   },
 )

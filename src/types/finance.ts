@@ -7,6 +7,7 @@ export type TransactionType = (typeof TRANSACTION_TYPES)[number]
 export type SortField = 'date' | 'amount' | 'category'
 export type SortDirection = 'asc' | 'desc'
 export type ThemeMode = 'light' | 'dark'
+export type TrendDirection = 'up' | 'down' | 'flat' | 'na'
 
 export interface Transaction {
   id: string
@@ -41,8 +42,17 @@ export interface CategoryBreakdownItem {
 export interface InsightsSummary {
   highestSpendingCategory: string
   highestSpendingAmount: number
+  topCategoryShare: number
   monthlyChangePercent: number
   monthlyChangeLabel: string
   netSavingsRate: number
   totalTransactions: number
+  currentMonthLabel: string
+  previousMonthLabel: string
+  spendingDirection: TrendDirection
+  spendingDeltaAmount: number
+  spendingDeltaPercent: number
+  savingsDirection: TrendDirection
+  savingsDeltaAmount: number
+  recommendedFocus: string
 }

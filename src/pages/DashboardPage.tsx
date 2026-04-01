@@ -36,11 +36,11 @@ export function DashboardPage() {
     >
       {role === 'viewer' ? (
         <p className="mb-4 rounded-xl border border-(--color-border) bg-(--color-panel) px-4 py-2 text-sm text-(--color-muted)">
-          You are in viewer mode. Switch to admin to add or edit transactions.
+          Viewer mode: all transaction mutations are disabled. Switch to admin for add, inline edit, and delete actions.
         </p>
       ) : (
         <p className="mb-4 rounded-xl border border-emerald-300/40 bg-emerald-100/50 px-4 py-2 text-sm text-emerald-700">
-          Admin mode enabled. You can add and edit transactions.
+          Admin mode enabled. You can add transactions, edit rows inline, and delete records.
         </p>
       )}
 

@@ -57,6 +57,7 @@ export function BalanceTrendChart() {
               tickFormatter={(value) => formatMonth(`${value}-01`)}
               stroke="var(--color-muted)"
               tickLine={false}
+              axisLine={false}
             />
             <YAxis stroke="var(--color-muted)" tickLine={false} axisLine={false} />
             <Tooltip
@@ -64,6 +65,7 @@ export function BalanceTrendChart() {
                 borderRadius: 12,
                 border: '1px solid var(--color-border)',
                 background: 'var(--color-panel)',
+                boxShadow: '0 10px 28px rgba(0, 0, 0, 0.14)',
               }}
               formatter={(value) => formatCurrency(Number(value ?? 0))}
               labelFormatter={(label) => formatMonth(`${label}-01`)}
@@ -75,6 +77,10 @@ export function BalanceTrendChart() {
               fillOpacity={1}
               fill="url(#balanceGradient)"
               strokeWidth={3}
+              activeDot={{ r: 5, strokeWidth: 0, fill: 'var(--color-primary-strong)' }}
+              isAnimationActive
+              animationDuration={900}
+              animationEasing="ease-out"
             />
           </AreaChart>
         </ResponsiveContainer>

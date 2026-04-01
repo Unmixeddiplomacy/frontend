@@ -14,16 +14,16 @@ export function SectionHeader({
   action,
 }: SectionHeaderProps) {
   return (
-    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div>
         {eyebrow ? (
           <p className="text-xs uppercase tracking-[0.2em] text-(--color-muted)">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="font-heading text-2xl text-(--color-heading)">{title}</h2>
+        <h2 className="type-title font-heading text-(--color-heading)">{title}</h2>
         {subtitle ? (
-          <p className="mt-1 text-sm text-(--color-muted)">{subtitle}</p>
+          <p className="mt-1.5 text-sm text-(--color-muted)">{subtitle}</p>
         ) : null}
       </div>
       {action ? <div className="flex items-center gap-2">{action}</div> : null}

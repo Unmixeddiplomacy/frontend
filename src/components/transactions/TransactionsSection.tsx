@@ -1,5 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Download, Pencil, Plus, Search, SlidersHorizontal } from 'lucide-react'
+import {
+  Download,
+  Lock,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import {
   selectFilteredTransactions,
@@ -15,6 +25,7 @@ import {
 } from '../../features/filters/filtersSlice'
 import {
   addTransaction,
+  deleteTransaction,
   updateTransaction,
 } from '../../features/transactions/transactionsSlice'
 import type { Transaction } from '../../types/finance'
@@ -26,6 +37,24 @@ import { EmptyState } from '../common/EmptyState'
 import { SectionHeader } from '../common/SectionHeader'
 import { TransactionFormModal } from './TransactionFormModal'
 
+interface InlineDraft {
+  date: string
+  description: string
+  amount: string
+  category: string
+  type: 'income' | 'expense'
+}
+
+function getInlineDraft(transaction: Transaction): InlineDraft {
+  return {
+    date: transaction.date,
+    description: transaction.description,
+    amount: String(transaction.amount),
+    category: transaction.category,
+    type: transaction.type,
+  }
+}
+
 export function TransactionsSection() {
   const dispatch = useAppDispatch()
   const role = useAppSelector((state) => state.ui.role)
@@ -34,11 +63,12 @@ export function TransactionsSection() {
   const categories = useAppSelector(selectUniqueCategories)
 
   const [openModal, setOpenModal] = useState(false)
-  const [editingItem, setEditingItem] = useState<Transaction | undefined>(
-    undefined,
-  )
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [inlineDraft, setInlineDraft] = useState<InlineDraft | null>(null)
+  const [inlineError, setInlineError] = useState<string | null>(null)
 
   const isAdmin = role === 'admin'
+  const viewerReason = 'Viewer role is read-only. Switch to admin to edit or delete.'
 
   const subtitle = useMemo(() => {
     if (transactions.length === 0) {
@@ -49,29 +79,90 @@ export function TransactionsSection() {
   }, [transactions.length])
 
   function handleAddClick() {
-    setEditingItem(undefined)
+    if (!isAdmin) {
+      return
+    }
+
     setOpenModal(true)
   }
 
-  function handleEditClick(transaction: Transaction) {
-    setEditingItem(transaction)
-    setOpenModal(true)
+  function handleStartInlineEdit(transaction: Transaction) {
+    if (!isAdmin) {
+      return
+    }
+
+    setEditingId(transaction.id)
+    setInlineDraft(getInlineDraft(transaction))
+    setInlineError(null)
+  }
+
+  function handleInlineCancel() {
+    setEditingId(null)
+    setInlineDraft(null)
+    setInlineError(null)
+  }
+
+  function handleInlineSave() {
+    if (!editingId || !inlineDraft) {
+      return
+    }
+
+    if (
+      !inlineDraft.date ||
+      !inlineDraft.description.trim() ||
+      !inlineDraft.category.trim()
+    ) {
+      setInlineError('Date, description, and category are required.')
+      return
+    }
+
+    const amount = Number(inlineDraft.amount)
+    if (Number.isNaN(amount) || amount <= 0) {
+      setInlineError('Amount must be a positive number.')
+      return
+    }
+
+    dispatch(
+      updateTransaction({
+        id: editingId,
+        date: inlineDraft.date,
+        description: inlineDraft.description.trim(),
+        amount,
+        category: inlineDraft.category.trim(),
+        type: inlineDraft.type,
+      }),
+    )
+
+    handleInlineCancel()
+  }
+
+  function handleDelete(transactionId: string) {
+    if (!isAdmin) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      'Delete this transaction? This action cannot be undone.',
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    dispatch(deleteTransaction(transactionId))
+
+    if (editingId === transactionId) {
+      handleInlineCancel()
+    }
   }
 
   function handleFormSubmit(transaction: Transaction) {
-    if (editingItem) {
-      dispatch(updateTransaction(transaction))
-    } else {
-      dispatch(addTransaction(transaction))
-    }
-
+    dispatch(addTransaction(transaction))
     setOpenModal(false)
-    setEditingItem(undefined)
   }
 
   function handleModalClose() {
     setOpenModal(false)
-    setEditingItem(undefined)
   }
 
   return (
@@ -100,14 +191,29 @@ export function TransactionsSection() {
             >
               <Download size={14} /> JSON
             </Button>
-            {isAdmin ? (
-              <Button size="sm" className="gap-2" onClick={handleAddClick}>
-                <Plus size={14} /> Add
-              </Button>
-            ) : null}
+            <Button
+              variant={isAdmin ? 'primary' : 'secondary'}
+              size="sm"
+              className="gap-2"
+              onClick={handleAddClick}
+              disabled={!isAdmin}
+              title={isAdmin ? 'Add transaction' : viewerReason}
+            >
+              {isAdmin ? <Plus size={14} /> : <Lock size={14} />} Add
+            </Button>
           </>
         }
       />
+
+      {!isAdmin ? (
+        <p className="mb-3 inline-flex items-center gap-2 rounded-xl border border-amber-300/50 bg-amber-100/60 px-3 py-2 text-xs text-amber-800">
+          <Lock size={14} /> Viewer mode is active: add, edit, and delete controls are disabled.
+        </p>
+      ) : (
+        <p className="mb-3 inline-flex items-center gap-2 rounded-xl border border-emerald-300/50 bg-emerald-100/60 px-3 py-2 text-xs text-emerald-800">
+          <Save size={14} /> Admin mode is active: inline edit and delete are enabled.
+        </p>
+      )}
 
       <div className="mb-4 grid gap-3 rounded-xl border border-(--color-border) bg-(--color-panel-soft) p-3 md:grid-cols-2 xl:grid-cols-5">
         <label className="xl:col-span-2">
@@ -207,47 +313,173 @@ export function TransactionsSection() {
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Amount</th>
-                {isAdmin ? <th className="px-4 py-3">Action</th> : null}
+                <th className="px-4 py-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((transaction) => (
-                <tr key={transaction.id} className="border-t border-(--color-border)">
-                  <td className="px-4 py-3 text-(--color-text)">
-                    {formatDate(transaction.date)}
-                  </td>
-                  <td className="px-4 py-3 text-(--color-heading)">
-                    {transaction.description}
-                  </td>
-                  <td className="px-4 py-3 text-(--color-text)">
-                    {transaction.category}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                        transaction.type === 'income'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-rose-100 text-rose-700'
-                      }`}
-                    >
-                      {transaction.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-(--color-heading)">
-                    {formatCurrency(transaction.amount)}
-                  </td>
-                  {isAdmin ? (
-                    <td className="px-4 py-3">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="gap-1"
-                        onClick={() => handleEditClick(transaction)}
-                      >
-                        <Pencil size={14} /> Edit
-                      </Button>
-                    </td>
-                  ) : null}
+                <tr
+                  key={transaction.id}
+                  className="border-t border-(--color-border) transition-colors duration-200 hover:bg-(--color-panel-soft)"
+                >
+                  {editingId === transaction.id && inlineDraft ? (
+                    <>
+                      <td className="px-4 py-3 text-(--color-text)">
+                        <input
+                          type="date"
+                          value={inlineDraft.date}
+                          onChange={(event) =>
+                            setInlineDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    date: event.target.value,
+                                  }
+                                : prev,
+                            )
+                          }
+                          className="h-9 w-full rounded-lg border border-(--color-border) bg-(--color-panel) px-2 text-xs outline-none focus:border-(--color-primary)"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-(--color-heading)">
+                        <input
+                          type="text"
+                          value={inlineDraft.description}
+                          onChange={(event) =>
+                            setInlineDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    description: event.target.value,
+                                  }
+                                : prev,
+                            )
+                          }
+                          className="h-9 w-full rounded-lg border border-(--color-border) bg-(--color-panel) px-2 text-xs outline-none focus:border-(--color-primary)"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-(--color-text)">
+                        <input
+                          type="text"
+                          value={inlineDraft.category}
+                          onChange={(event) =>
+                            setInlineDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    category: event.target.value,
+                                  }
+                                : prev,
+                            )
+                          }
+                          className="h-9 w-full rounded-lg border border-(--color-border) bg-(--color-panel) px-2 text-xs outline-none focus:border-(--color-primary)"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={inlineDraft.type}
+                          onChange={(event) =>
+                            setInlineDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    type: event.target.value as 'income' | 'expense',
+                                  }
+                                : prev,
+                            )
+                          }
+                          className="h-9 w-full rounded-lg border border-(--color-border) bg-(--color-panel) px-2 text-xs outline-none focus:border-(--color-primary)"
+                        >
+                          <option value="income">income</option>
+                          <option value="expense">expense</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-(--color-heading)">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={inlineDraft.amount}
+                          onChange={(event) =>
+                            setInlineDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    amount: event.target.value,
+                                  }
+                                : prev,
+                            )
+                          }
+                          className="h-9 w-full rounded-lg border border-(--color-border) bg-(--color-panel) px-2 text-xs outline-none focus:border-(--color-primary)"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" className="gap-1" onClick={handleInlineSave}>
+                            <Save size={13} /> Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="gap-1"
+                            onClick={handleInlineCancel}
+                          >
+                            <X size={13} /> Cancel
+                          </Button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3 text-(--color-text)">
+                        {formatDate(transaction.date)}
+                      </td>
+                      <td className="px-4 py-3 text-(--color-heading)">
+                        {transaction.description}
+                      </td>
+                      <td className="px-4 py-3 text-(--color-text)">
+                        {transaction.category}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                            transaction.type === 'income'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-rose-100 text-rose-700'
+                          }`}
+                        >
+                          {transaction.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-(--color-heading)">
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="gap-1"
+                            onClick={() => handleStartInlineEdit(transaction)}
+                            disabled={!isAdmin}
+                            title={isAdmin ? 'Inline edit transaction' : viewerReason}
+                          >
+                            <Pencil size={14} /> Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="gap-1 text-rose-700 hover:bg-rose-100/70"
+                            onClick={() => handleDelete(transaction.id)}
+                            disabled={!isAdmin}
+                            title={isAdmin ? 'Delete transaction' : viewerReason}
+                          >
+                            <Trash2 size={14} /> Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -255,12 +487,13 @@ export function TransactionsSection() {
         </div>
       )}
 
+      {inlineError ? <p className="mt-2 text-sm text-(--color-danger)">{inlineError}</p> : null}
+
       {openModal ? (
         <TransactionFormModal
-          key={editingItem?.id ?? 'new'}
-          mode={editingItem ? 'edit' : 'add'}
+          key="new"
+          mode="add"
           categories={categories}
-          initialTransaction={editingItem}
           onClose={handleModalClose}
           onSubmit={handleFormSubmit}
         />

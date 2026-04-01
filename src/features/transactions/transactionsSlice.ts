@@ -35,6 +35,9 @@ const transactionsSlice = createSlice({
         state.items[index] = action.payload
       }
     },
+    deleteTransaction(state, action: PayloadAction<string>) {
+      state.items = state.items.filter((item) => item.id !== action.payload)
+    },
     replaceTransactions(state, action: PayloadAction<Transaction[]>) {
       state.items = action.payload
       state.status = 'succeeded'
@@ -58,7 +61,7 @@ const transactionsSlice = createSlice({
   },
 })
 
-export const { addTransaction, updateTransaction, replaceTransactions } =
+export const { addTransaction, updateTransaction, deleteTransaction, replaceTransactions } =
   transactionsSlice.actions
 
 export default transactionsSlice.reducer
